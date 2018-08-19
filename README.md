@@ -10,7 +10,7 @@ The sample business idea in the starter kit can be used to automatically solve s
 
 # Dependencies
 
-The solution does not include every possible framework, tool, or feature that an enterprise application might need. It uses common, accessible technology for most business software developers. It doesn't include extensive support for logging or analytics, though these can all be added easily. The nature of this architecture is to support modularity and encapsulationMost so many current dependencies can easily be swapped out for your technology of choice.
+The solution does not include every possible framework, tool, or feature that an enterprise application might need. It uses common, accessible technology for most business software developers. It doesn't include extensive support for logging or analytics, though these can all be added easily. The nature of this architecture is to support modularity and encapsulation. Most so many current dependencies can easily be swapped out for your technology of choice.
 
 # Solution Structure
 
