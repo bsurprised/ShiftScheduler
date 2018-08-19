@@ -1,6 +1,3 @@
-# ShiftScheduler
-A boilerplate ASP.NET Core project, including a sample employee shift scheduler app
-=======
 # Onyx Shift Scheduler
 
 Onyx Shift Scheduler is a boilerplate ASP.NET Core project with clean architecture in mind. 
