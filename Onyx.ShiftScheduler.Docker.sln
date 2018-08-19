@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2042
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{35290D65-49A6-4EFF-B1D0-20CE899A6B17}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{4473E695-F6C1-4578-8D19-E0CE7417516C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Onyx.ShiftScheduler.Api", "src\Onyx.ShiftScheduler.Api\Onyx.ShiftScheduler.Api.csproj", "{B50DDA79-472D-48AC-8313-057893250EE0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Onyx.ShiftScheduler.Infrastructure", "src\Onyx.ShiftScheduler.Infrastructure\Onyx.ShiftScheduler.Infrastructure.csproj", "{C3141F4A-A381-43A5-B3E3-C3D9BFA5DA25}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Onyx.ShiftScheduler.Core", "src\Onyx.ShiftScheduler.Core\Onyx.ShiftScheduler.Core.csproj", "{79DC2DB5-7732-404E-9555-B37A97CC49A4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Onyx.ShiftScheduler.Tests", "test\Onyx.ShiftScheduler.Tests\Onyx.ShiftScheduler.Tests.csproj", "{11AE257D-28F2-4748-A97E-909CBDB272DC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Onyx.ShiftScheduler.Web", "src\Onyx.ShiftScheduler.Web\Onyx.ShiftScheduler.Web.csproj", "{8A38E05E-C06B-4F5B-B1AC-C3E5D6C8F5F2}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "api-docker-compose", "docker\api\api-docker-compose.dcproj", "{B1A17A5A-D7EB-437F-AEB0-6085241FDAB8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B50DDA79-472D-48AC-8313-057893250EE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B50DDA79-472D-48AC-8313-057893250EE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B50DDA79-472D-48AC-8313-057893250EE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B50DDA79-472D-48AC-8313-057893250EE0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3141F4A-A381-43A5-B3E3-C3D9BFA5DA25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3141F4A-A381-43A5-B3E3-C3D9BFA5DA25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3141F4A-A381-43A5-B3E3-C3D9BFA5DA25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3141F4A-A381-43A5-B3E3-C3D9BFA5DA25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79DC2DB5-7732-404E-9555-B37A97CC49A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79DC2DB5-7732-404E-9555-B37A97CC49A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79DC2DB5-7732-404E-9555-B37A97CC49A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79DC2DB5-7732-404E-9555-B37A97CC49A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11AE257D-28F2-4748-A97E-909CBDB272DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11AE257D-28F2-4748-A97E-909CBDB272DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11AE257D-28F2-4748-A97E-909CBDB272DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11AE257D-28F2-4748-A97E-909CBDB272DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A38E05E-C06B-4F5B-B1AC-C3E5D6C8F5F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A38E05E-C06B-4F5B-B1AC-C3E5D6C8F5F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1A17A5A-D7EB-437F-AEB0-6085241FDAB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1A17A5A-D7EB-437F-AEB0-6085241FDAB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1A17A5A-D7EB-437F-AEB0-6085241FDAB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1A17A5A-D7EB-437F-AEB0-6085241FDAB8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B50DDA79-472D-48AC-8313-057893250EE0} = {35290D65-49A6-4EFF-B1D0-20CE899A6B17}
+		{C3141F4A-A381-43A5-B3E3-C3D9BFA5DA25} = {35290D65-49A6-4EFF-B1D0-20CE899A6B17}
+		{79DC2DB5-7732-404E-9555-B37A97CC49A4} = {35290D65-49A6-4EFF-B1D0-20CE899A6B17}
+		{11AE257D-28F2-4748-A97E-909CBDB272DC} = {4473E695-F6C1-4578-8D19-E0CE7417516C}
+		{8A38E05E-C06B-4F5B-B1AC-C3E5D6C8F5F2} = {35290D65-49A6-4EFF-B1D0-20CE899A6B17}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {51BBBB62-F8B2-4704-91CA-2C25697271AC}
+	EndGlobalSection
+EndGlobal

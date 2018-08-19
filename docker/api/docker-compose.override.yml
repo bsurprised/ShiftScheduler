@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  onyx.shiftscheduler.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "9087:80"
