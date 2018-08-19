@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ShiftScheduler
 A boilerplate ASP.NET Core project, including a sample employee shift scheduler app
 =======
@@ -41,4 +40,3 @@ A very simple and basic Angular project coupled with the API to retrieve a sampl
 In a real application I will likely have separate test projects, organized based on the kind of test (unit, functional, integration, etc.) or by the project they are testing (Core, Infrastructure, Web). 
 For this simple boilerplate, there is just one test project, with folders representing the projects being tested. The test project uses xunit, Moq and ASP.NET Core's TestHost.
 
->>>>>>> Initial commit
