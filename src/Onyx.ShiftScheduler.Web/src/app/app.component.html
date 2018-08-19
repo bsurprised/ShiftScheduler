@@ -1,0 +1,38 @@
+<h1>
+  Welcome to {{ title }}!
+</h1>
+<div class="row">
+  <div class="col-xl-3 col-lg-4">
+    <div class="card card-default">
+      <div class="card-header">Schedule</div>
+      <div class="card-body">
+        <p *ngIf="currentSchedule">
+
+        </p>
+        <p>
+          <strong>Get a new shift schedule for 10 employees in two weeks.</strong>
+        </p>
+        <div class="ml-auto">
+          <button type="button" class="btn btn-info btn-bloc" (click)="getSchedule()">Get a new schedule</button>
+        </div>
+        <div class="logs" *ngIf="currentStats">
+          <p>
+            Logs:
+          </p>
+          <div class="stats">{{ currentStats }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-9 col-lg-8">
+    <div class="card card-default">
+      <div class="card-header" *ngIf="currentSchedule">{{ currentSchedule.name }}</div>
+      <div class="card-body">
+        <div *ngIf="calendarOptions">
+          <ng-fullcalendar #ucCalendar [options]="calendarOptions"></ng-fullcalendar>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
