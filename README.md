@@ -72,10 +72,13 @@ You need `Latest Docker CE` switched to `linux` containers.
 ## Development
 
 Run the `API project` from Visual Studio. The Swagger UI will be launched on port `44019` of the IIS Express.
+Use `npm install` to install the missing packages. 
 Run the `Web project` from the command line with `npm start` for a dev server, or `npm run hmr` for hot module replacement support. Navigate to `http://localhost:4200/`
+If by any change, you get an error from the sass module, it might be that you opened the Visual Studio and not fetching all node modules correctly. Run a `npm rebuild node-sass` to fix the issue.
 
 ## Build and Docker
 
 Load the `Onyx.ShiftScheduler.Docker.sln` solution instead for Visual Studio docker support and start the container. The containerized solution uses `9087` as the service port.
 Either use `npm run build` or `ng build` to build the Angular project. The artifacts will be saved in `dist\` folder, or run the project by using the PowerShell script `up.ps1` provided in `docker\ui`.
+Remember to use `docker-compose build` before running the script and starting a new container. 
 The Angular project uses port `9089` in production mode and will consume the API on port `9087`.
