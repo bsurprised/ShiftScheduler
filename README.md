@@ -14,7 +14,7 @@ The project demonstrates a basic usage of the following:
 - **N-Tier architecture** (UI, Infrastructure, Core) plus Tests.
 - Barebone API starter kit with Swagger support and **API versioning**.
 - **IoC/DI** using StructureMap, the oldest in town.
-- A **Repository** class with extensive routines as a base for the DAL layer of your entities.
+- A **Repository** class with routines as a base for the DAL layer of your entities.
 - **Integration Tests**
 - Visual Studio **Docker support** for faster and simpler tests.
 - And more (DbContext Seeding, InMemory Databases, ...)
@@ -80,5 +80,5 @@ If by any change, you get an error from the sass module, it might be that you op
 
 Load the `Onyx.ShiftScheduler.Docker.sln` solution instead for Visual Studio docker support and start the container. The containerized solution uses `9087` as the service port.
 Either use `npm run build` or `ng build` to build the Angular project. The artifacts will be saved in `dist\` folder, or run the project by using the PowerShell script `up.ps1` provided in `docker\ui`.
-Remember to use `docker-compose build` before running the script and starting a new container. 
+Remember to use `docker-compose build` or run the `build.ps1` before running the script and starting a new container. 
 The Angular project uses port `9089` in production mode and will consume the API on port `9087`.
