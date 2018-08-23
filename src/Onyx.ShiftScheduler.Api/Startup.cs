@@ -138,7 +138,7 @@ namespace Onyx.ShiftScheduler.Api
                 s.SwaggerUiRoute = "/ui";
             });
 
-            app.UseStaticFiles();
+            //app.UseStaticFiles(); // If needed
             app.UseMvc();
         }
     }

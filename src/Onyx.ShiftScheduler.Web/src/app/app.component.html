@@ -10,12 +10,100 @@
 
         </p>
         <p>
-          <strong>Get a new shift schedule for 10 employees in two weeks.</strong>
+          <strong>Get a new shift schedule.</strong><br />
+          <small>Next date: {{ model.startDate }}</small><br />
+          <small>You can select up to <strong>30</strong> random employees in this demo.</small>
         </p>
         <div class="ml-auto">
-          <button type="button" class="btn btn-info btn-bloc" (click)="getSchedule()">Get a new schedule</button>
+          <form #app="ngForm" (ngSubmit)="getSchedule()">
+
+            <div class="form-group">
+              <label for="transitionSetId">Business Rule</label>
+              <select class="form-control" id="transitionSetId"
+                      required
+                      [(ngModel)]="model.transitionSetId" name="transitionSetId"
+                      #transitionSetId="ngModel">
+                <option *ngFor="let transition of transitionSets" [value]="transition.id" [selected]="transition.id === model.transitionSetId">{{transition.name}}</option>
+              </select>
+              <div [hidden]="transitionSetId.valid || transitionSetId.pristine" class="alert alert-danger">
+                Transition Set is required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="numberOfEmployees">Number Of Employees</label>
+              <input type="number" class="form-control" id="numberOfEmployees" min="1" max="30"
+                     [(ngModel)]="model.numberOfEmployees" name="numberOfEmployees"
+                     #numberOfEmployees="ngModel">
+              <div [hidden]="numberOfEmployees.valid || numberOfEmployees.pristine"
+                   class="alert alert-danger">
+                Number Of Employees is required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="days">Days</label>
+              <input type="number" class="form-control" id="days" min="1"
+                     [(ngModel)]="model.days" name="days"
+                     #days="ngModel">
+              <div [hidden]="days.valid || days.pristine"
+                   class="alert alert-danger">
+                Days is required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="teamSize">Team Size</label>
+              <input type="number" class="form-control" id="teamSize" min="1"
+                     [(ngModel)]="model.teamSize" name="teamSize"
+                     #teamSize="ngModel">
+              <div [hidden]="teamSize.valid || teamSize.pristine"
+                   class="alert alert-danger">
+                Team Size is required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="minShiftsPerCycle">Min Shifts Per Cycle</label>
+              <input type="number" class="form-control" id="minShiftsPerCycle" min="1"
+                     [(ngModel)]="model.minShiftsPerCycle" name="minShiftsPerCycle"
+                     #minShiftsPerCycle="ngModel">
+              <div [hidden]="minShiftsPerCycle.valid || minShiftsPerCycle.pristine"
+                   class="alert alert-danger">
+                Min Shifts Per Cycle is required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="startHour">Start Hour</label>
+              <input type="number" class="form-control" id="startHour" min="0" max="12"
+                     [(ngModel)]="model.startHour" name="startHour"
+                     #startHour="ngModel">
+              <div [hidden]="startHour.valid || startHour.pristine"
+                   class="alert alert-danger">
+                Start Hour Cycle is required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="shiftHours">Shift Hours</label>
+              <input type="number" class="form-control" id="shiftHours" min="1" max="12"
+                     [(ngModel)]="model.shiftHours" name="shiftHours"
+                     #shiftHours="ngModel">
+              <div [hidden]="shiftHours.valid || shiftHours.pristine"
+                   class="alert alert-danger">
+                Shift Hours Per Cycle is required and between 1 to 12
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" [disabled]="!app.form.valid">Get a new schedule</button>
+          </form>          
         </div>
         <div class="logs" *ngIf="currentStats">
+          <div [hidden]="currentSchedule.error === null"
+               class="alert alert-danger">
+            {{ currentSchedule.error }}
+          </div>
           <p>
             Logs:
           </p>

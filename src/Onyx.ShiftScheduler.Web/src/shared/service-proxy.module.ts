@@ -7,7 +7,9 @@ export const apiBaseUrl = { provide: ServiceProxy.API_BASE_URL, useValue: enviro
 
 @NgModule({
   providers: [
-    apiBaseUrl, ServiceProxy.SchedulesClient
+    apiBaseUrl,
+    ServiceProxy.SchedulesClient,
+    ServiceProxy.TransitionSetsClient
   ]
 })
 export class ServiceProxyModule { }

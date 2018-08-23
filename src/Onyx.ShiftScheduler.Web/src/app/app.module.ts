@@ -1,5 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { environment } from '../environments/environment';
 
@@ -18,11 +19,12 @@ export const apiBaseUrl = { provide: ServiceProxy.API_BASE_URL, useValue: enviro
   ],
   imports: [
     BrowserModule,
+    FormsModule,
     HttpClientModule,
     FullCalendarModule,
     ServiceProxyModule
   ],
-  providers: [apiBaseUrl, ServiceProxy.SchedulesClient],
+  providers: [apiBaseUrl, ServiceProxy.SchedulesClient , ServiceProxy.TransitionSetsClient],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

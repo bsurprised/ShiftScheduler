@@ -22,14 +22,15 @@ namespace Onyx.ShiftScheduler.Infrastructure.Scheduler
         public string StatisticalResults { get; private set; }
 
         /// <summary>
-        ///     Get a new schedule based on number of teams and days.
-        ///     This is a default 24/7 shift design based on 12 hour day/night shifts
-        ///     Rules:
-        ///     - One shift in a day for every employee
-        ///     - Two days off after 2 sequential date on the job
-        ///     - No two night shifts in a row
-        ///     - At least two shifts in a cycle for every employee
+        ///     A helper for solver error string.
         /// </summary>
+        public string LastError { get; private set; }
+
+        /// <summary>
+        ///     Get a new schedule based on number of teams and days.
+        ///     Provide a rule set for transitions and day and employee constraints
+        /// </summary>
+        /// <param name="ruleSet">Rule set to use for transitions</param>
         /// <param name="shiftEmployees">Participating employees for the shifts</param>
         /// <param name="startDate">Schedule start date</param>
         /// <param name="numberOfDays">Number of days in each cycle</param>
@@ -40,16 +41,19 @@ namespace Onyx.ShiftScheduler.Infrastructure.Scheduler
         /// <param name="maxSolutions">Max returned results</param>
         /// <returns></returns>
         public Task<List<Schedule>> CreateNewScheduleAsync(
+            RuleSet ruleSet,
             IList<Employee> shiftEmployees,
             DateTime startDate,
             int numberOfDays,
-            int teamSize = 2,
-            int minShiftsPerCycle = 2,
-            int startHour = 7,
-            int shiftHours = 12,
+            int teamSize,
+            int minShiftsPerCycle,
+            int startHour,
+            int shiftHours,
             int maxSolutions = 1)
         {
             // Some sanity checks
+            if (ruleSet == null)
+                throw new ArgumentOutOfRangeException($"Rule set is empty.");
             if (shiftEmployees == null || shiftEmployees.Count < 1)
                 throw new ArgumentOutOfRangeException($"Employee collection is empty.");
             if (numberOfDays < 1)
@@ -66,6 +70,7 @@ namespace Onyx.ShiftScheduler.Infrastructure.Scheduler
                     $"Shift hours cannot be bigger than twelve. Please provide a number between 1-12");
 
             var numberOfEmployees = shiftEmployees.Count;
+            LastError = null;
 
             AddDiagnostics("Starting to solve a new schedule\n\n");
             AddDiagnostics("This is a schedule for {0} employees in {1} days\n", numberOfEmployees, numberOfDays);
@@ -78,39 +83,22 @@ namespace Onyx.ShiftScheduler.Infrastructure.Scheduler
             // Initiate a new solver
             var solver = new Solver("Schedule");
 
-            int[] shifts = {ShiftConsts.None, ShiftConsts.Day, ShiftConsts.Night, ShiftConsts.Off};
-            int[] validShifts = {ShiftConsts.Day, ShiftConsts.Night, ShiftConsts.Off};
+            int[] shifts = { ShiftConsts.None, ShiftConsts.Day, ShiftConsts.Night, ShiftConsts.Off };
+            int[] validShifts = { ShiftConsts.Day, ShiftConsts.Night, ShiftConsts.Off };
 
             /*
              * DFA and Transitions
              */
-            var initialState = 1; // Everybody starts at state 1
-            int[] acceptingStates = {1, 2, 3, 4, 5};
+            var initialState = ruleSet.InitialState; // Everybody starts at this state
+            int[] acceptingStates = ruleSet.AcceptingStates;
 
             // Transition tuples For TransitionConstraint
             var transitionTuples = new IntTupleSet(3);
             // Every tuple contains { state, input, next state }
-            transitionTuples.InsertAll(new[,]
-            {
-                /* State 1 - either a day shift, a night shift or an off shift */
-                {1, 1, 2}, // d --> 2
-                {1, 2, 3}, // n --> 3
-                {1, 3, 1}, // o --> 1
-                /* State 2 - if day and night shift, go to 4 for two days off */
-                {2, 1, 4}, // d --> 4
-                {2, 2, 4}, // n --> 4
-                {2, 3, 1}, // o --> 1
-                /* State 3 - no night shift if had a night shift before, either day shift or off */
-                {3, 1, 4}, // d --> 4
-                {3, 3, 1}, // o --> 1
-                /* State 4 - only and off shift and continuing to another off */
-                {4, 3, 5}, // o --> 5
-                /* State 5 - another off shift and reset the cycle */
-                {5, 3, 1} // o --> 1
-            });
+            transitionTuples.InsertAll(ruleSet.Tuples);
 
             // Just for presentation in stats
-            string[] days = {"d", "n", "o"};
+            string[] days = { "d", "n", "o" };
 
             /*
              * Decision variables
@@ -128,8 +116,8 @@ namespace Onyx.ShiftScheduler.Infrastructure.Scheduler
             // Shifts per day statistics
             var dayStats = new IntVar[numberOfDays, shiftCount];
             for (var i = 0; i < numberOfDays; i++)
-            for (var j = 0; j < shiftCount; j++)
-                dayStats[i, j] = solver.MakeIntVar(0, numberOfEmployees, "dayStats");
+                for (var j = 0; j < shiftCount; j++)
+                    dayStats[i, j] = solver.MakeIntVar(0, numberOfEmployees, "dayStats");
 
             // Team statistics
             var teamStats = new IntVar[numberOfEmployees];
@@ -152,7 +140,7 @@ namespace Onyx.ShiftScheduler.Infrastructure.Scheduler
                 // Number of worked days (either day or night shift)
                 var teamDays = new IntVar[numberOfDays];
                 for (var day = 0; day < numberOfDays; day++)
-                    teamDays[day] = x[team, day].IsMember(new[] {ShiftConsts.Day, ShiftConsts.Night});
+                    teamDays[day] = x[team, day].IsMember(new[] { ShiftConsts.Day, ShiftConsts.Night });
 
                 teamStats[team] = teamDays.Sum().Var();
 
@@ -175,24 +163,21 @@ namespace Onyx.ShiftScheduler.Infrastructure.Scheduler
 
                 // Constraints for each day
 
-                // - exactly 2 on day shift
+                // - exactly teamSize on day shift
                 solver.Add(dayStats[day, ShiftConsts.Day] == teamSize);
-                // - exactly 2 on night shift
+                // - exactly teamSize on night shift
                 solver.Add(dayStats[day, ShiftConsts.Night] == teamSize);
                 // - The rest of the employees are off duty
                 solver.Add(dayStats[day, ShiftConsts.Off] == numberOfEmployees - teamSize * 2);
 
-                /*
-                 * Note: We can customize constraints even further
-                 *
-                 * For example, a special constraints for weekends (1 employee each shift as weekends are quiet):
-                 * if (day % 7 == 5 || day % 7 == 6)
-                 * {
-                 *     solver.Add(dayStats[day, ShiftType.Day] == 1);
-                 *     solver.Add(dayStats[day, ShiftType.Night] == 1);
-                 *     solver.Add(dayStats[day, ShiftType.Off] == numberOfEmployees - 2);
-                 * }
-                 *
+                /* We can customize constraints even further
+                 * For example, a special constraints for weekends(1 employee each shift as weekends are quiet):                 
+                if (day % 7 == 5 || day % 7 == 6)
+                {
+                    solver.Add(dayStats[day, ShiftConsts.Day] == weekendTeamSize);
+                    solver.Add(dayStats[day, ShiftConsts.Night] == weekendTeamSize);
+                    solver.Add(dayStats[day, ShiftConsts.Off] == numberOfEmployees - weekendTeamSize * 2);
+                }
                 */
             }
 
@@ -205,8 +190,11 @@ namespace Onyx.ShiftScheduler.Infrastructure.Scheduler
 
             var log = solver.MakeSearchLog(1000000);
 
+            // Don't search after a certain miliseconds
+            var timeLimit = solver.MakeTimeLimit(1000); // a second
+
             // Start the search
-            solver.NewSearch(db, log);
+            solver.NewSearch(db, log, timeLimit);
 
             // Return solutions as result
             var schedules = new List<Schedule>();
@@ -236,12 +224,12 @@ namespace Onyx.ShiftScheduler.Infrastructure.Scheduler
                     var occ = new Dictionary<int, int>();
                     for (var j = 0; j < numberOfDays; j++)
                     {
-                        var shiftVal = (int) x[i, j].Value() - 1;
+                        var shiftVal = (int)x[i, j].Value() - 1;
                         if (!occ.ContainsKey(shiftVal)) occ[shiftVal] = 0;
                         occ[shiftVal]++;
 
                         // Add a shift
-                        var shiftType = (ShiftType) shiftVal + 1;
+                        var shiftType = (ShiftType)shiftVal + 1;
                         var shiftStart = startDate.Date
                             .AddDays(j)
                             .AddHours(shiftType == ShiftType.Off
@@ -299,8 +287,15 @@ namespace Onyx.ShiftScheduler.Infrastructure.Scheduler
             AddDiagnostics("\nWallTime: {0}ms", solver.WallTime());
 
             solver.EndSearch();
-
+           
             AddDiagnostics("\n\nFinished solving the schedule.");
+
+            if (schedules.Count < 1)
+            {
+                LastError = "There's no solution in the model for your input.";
+                // We reached the limit and there's no solution
+                AddDiagnostics("\n\nThere's no solution in the model for your input.");
+            }
 
             return Task.FromResult(schedules);
         }

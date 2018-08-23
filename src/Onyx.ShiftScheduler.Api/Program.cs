@@ -44,7 +44,7 @@ namespace Onyx.ShiftScheduler.Api
 
         private static void EnsureDataStorageIsReady(IServiceProvider services)
         {
-            var context = Startup.ServiceProvider.GetRequiredService<AppDbContext>();
+            var context = services.GetRequiredService<AppDbContext>();
             context.Initialize();
         }
     }

@@ -3,6 +3,8 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 using Onyx.ShiftScheduler.Api;
 using Onyx.ShiftScheduler.Core.Helpers;
@@ -24,7 +26,23 @@ namespace Onyx.ShiftScheduler.Tests.Integration.Api
         [Fact]
         public async Task ReturnsDemoSchedule()
         {
-            var response = await _client.GetAsync("/v1/schedules");
+            var startDate = DateTime.SpecifyKind(Utils.GetNextWeekday(DateTime.Now, DayOfWeek.Monday), DateTimeKind.Unspecified);
+
+            var request = new ScheduleRequestDto()
+            {
+                TransitionSetId = 1,
+                StartDate = startDate,
+                Days = 14,
+                MinShiftsPerCycle = 2,
+                NumberOfEmployees = 10,
+                ShiftHours = 12,
+                StartHour = 7,
+                TeamSize = 2,                
+            };
+            var byteContent = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(request)));
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var response = await _client.PostAsync("/v1/schedules", byteContent);
             response.EnsureSuccessStatusCode();
 
             var webResponse = await response.Content.ReadAsStringAsync();
@@ -32,8 +50,6 @@ namespace Onyx.ShiftScheduler.Tests.Integration.Api
 
             Assert.NotNull(schedules.Name);
             Assert.NotNull(schedules.Statistics);
-
-            var startDate = DateTime.SpecifyKind(Utils.GetNextWeekday(DateTime.Now, DayOfWeek.Monday), DateTimeKind.Unspecified);
 
             Assert.Equal(startDate.Date, schedules.StartDate);
             Assert.Equal(startDate.AddDays(14).Date, schedules.EndDate);

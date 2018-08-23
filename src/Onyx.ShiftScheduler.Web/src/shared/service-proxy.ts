@@ -11,8 +11,6 @@ import { Observable, from as _observableFrom, throwError as _observableThrow, of
 import { Injectable, Inject, Optional, InjectionToken } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse, HttpResponseBase } from '@angular/common/http';
 
-import * as moment from 'moment';
-
 export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
 
 @Injectable({
@@ -28,11 +26,14 @@ export class SchedulesClient {
         this.baseUrl = baseUrl ? baseUrl : "http://localhost:44019";
     }
 
-    get(): Observable<ScheduleDto | null> {
+    get(request: ScheduleRequestDto | null): Observable<ScheduleDto | null> {
         let url_ = this.baseUrl + "/v1/Schedules";
         url_ = url_.replace(/[?&]$/, "");
 
+        const content_ = JSON.stringify(request);
+
         let options_ : any = {
+            body: content_,
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
@@ -41,7 +42,7 @@ export class SchedulesClient {
             })
         };
 
-        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
             return this.processGet(response_);
         })).pipe(_observableCatch((response_: any) => {
             if (response_ instanceof HttpResponseBase) {
@@ -78,15 +79,84 @@ export class SchedulesClient {
     }
 }
 
-export class ScheduleDto implements IScheduleDto {
-    name?: string | undefined;
-    startDate!: moment.Moment;
-    endDate!: moment.Moment;
-    shifts?: ShiftDto[] | undefined;
-    statistics?: string | undefined;
-    days!: number;
+@Injectable({
+    providedIn: 'root'
+})
+export class TransitionSetsClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
 
-    constructor(data?: IScheduleDto) {
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ? baseUrl : "http://localhost:44019";
+    }
+
+    getActiveTransitionSets(): Observable<TransitionSetDto[] | null> {
+        let url_ = this.baseUrl + "/v1/TransitionSets";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json", 
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetActiveTransitionSets(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetActiveTransitionSets(<any>response_);
+                } catch (e) {
+                    return <Observable<TransitionSetDto[] | null>><any>_observableThrow(e);
+                }
+            } else
+                return <Observable<TransitionSetDto[] | null>><any>_observableThrow(response_);
+        }));
+    }
+
+    protected processGetActiveTransitionSets(response: HttpResponseBase): Observable<TransitionSetDto[] | null> {
+        const status = response.status;
+        const responseBlob = 
+            response instanceof HttpResponse ? response.body : 
+            (<any>response).error instanceof Blob ? (<any>response).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }};
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (resultData200 && resultData200.constructor === Array) {
+                result200 = [];
+                for (let item of resultData200)
+                    result200.push(TransitionSetDto.fromJS(item));
+            }
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf<TransitionSetDto[] | null>(<any>null);
+    }
+}
+
+export class ScheduleRequestDto implements IScheduleRequestDto {
+    transitionSetId!: number;
+    startDate!: Date;
+    days!: number;
+    numberOfEmployees!: number;
+    teamSize!: number;
+    minShiftsPerCycle!: number;
+    startHour!: number;
+    shiftHours!: number;
+
+    constructor(data?: IScheduleRequestDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -97,15 +167,142 @@ export class ScheduleDto implements IScheduleDto {
 
     init(data?: any) {
         if (data) {
+            this.transitionSetId = data["transitionSetId"];
+            this.startDate = data["startDate"] ? new Date(data["startDate"].toString()) : <any>undefined;
+            this.days = data["days"];
+            this.numberOfEmployees = data["numberOfEmployees"];
+            this.teamSize = data["teamSize"];
+            this.minShiftsPerCycle = data["minShiftsPerCycle"];
+            this.startHour = data["startHour"];
+            this.shiftHours = data["shiftHours"];
+        }
+    }
+
+    static fromJS(data: any): ScheduleRequestDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ScheduleRequestDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["transitionSetId"] = this.transitionSetId;
+        data["startDate"] = this.startDate ? this.startDate.toISOString() : <any>undefined;
+        data["days"] = this.days;
+        data["numberOfEmployees"] = this.numberOfEmployees;
+        data["teamSize"] = this.teamSize;
+        data["minShiftsPerCycle"] = this.minShiftsPerCycle;
+        data["startHour"] = this.startHour;
+        data["shiftHours"] = this.shiftHours;
+        return data; 
+    }
+}
+
+export interface IScheduleRequestDto {
+    transitionSetId: number;
+    startDate: Date;
+    days: number;
+    numberOfEmployees: number;
+    teamSize: number;
+    minShiftsPerCycle: number;
+    startHour: number;
+    shiftHours: number;
+}
+
+export class EntityDtoOfNullableOfInt32 implements IEntityDtoOfNullableOfInt32 {
+    id?: number | undefined;
+
+    constructor(data?: IEntityDtoOfNullableOfInt32) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(data?: any) {
+        if (data) {
+            this.id = data["id"];
+        }
+    }
+
+    static fromJS(data: any): EntityDtoOfNullableOfInt32 {
+        data = typeof data === 'object' ? data : {};
+        let result = new EntityDtoOfNullableOfInt32();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        return data; 
+    }
+}
+
+export interface IEntityDtoOfNullableOfInt32 {
+    id?: number | undefined;
+}
+
+export class EntityDto extends EntityDtoOfNullableOfInt32 implements IEntityDto {
+
+    constructor(data?: IEntityDto) {
+        super(data);
+    }
+
+    init(data?: any) {
+        super.init(data);
+        if (data) {
+        }
+    }
+
+    static fromJS(data: any): EntityDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new EntityDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface IEntityDto extends IEntityDtoOfNullableOfInt32 {
+}
+
+export class ScheduleDto extends EntityDto implements IScheduleDto {
+    name?: string | undefined;
+    startDate!: Date;
+    endDate!: Date;
+    shifts?: ShiftDto[] | undefined;
+    statistics?: string | undefined;
+    error?: string | undefined;
+    success!: boolean;
+    days!: number;
+
+    constructor(data?: IScheduleDto) {
+        super(data);
+    }
+
+    init(data?: any) {
+        super.init(data);
+        if (data) {
             this.name = data["name"];
-            this.startDate = data["startDate"] ? moment(data["startDate"].toString()) : <any>undefined;
-            this.endDate = data["endDate"] ? moment(data["endDate"].toString()) : <any>undefined;
+            this.startDate = data["startDate"] ? new Date(data["startDate"].toString()) : <any>undefined;
+            this.endDate = data["endDate"] ? new Date(data["endDate"].toString()) : <any>undefined;
             if (data["shifts"] && data["shifts"].constructor === Array) {
                 this.shifts = [];
                 for (let item of data["shifts"])
                     this.shifts.push(ShiftDto.fromJS(item));
             }
             this.statistics = data["statistics"];
+            this.error = data["error"];
+            this.success = data["success"];
             this.days = data["days"];
         }
     }
@@ -128,40 +325,41 @@ export class ScheduleDto implements IScheduleDto {
                 data["shifts"].push(item.toJSON());
         }
         data["statistics"] = this.statistics;
+        data["error"] = this.error;
+        data["success"] = this.success;
         data["days"] = this.days;
+        super.toJSON(data);
         return data; 
     }
 }
 
-export interface IScheduleDto {
+export interface IScheduleDto extends IEntityDto {
     name?: string | undefined;
-    startDate: moment.Moment;
-    endDate: moment.Moment;
+    startDate: Date;
+    endDate: Date;
     shifts?: ShiftDto[] | undefined;
     statistics?: string | undefined;
+    error?: string | undefined;
+    success: boolean;
     days: number;
 }
 
-export class ShiftDto implements IShiftDto {
+export class ShiftDto extends EntityDto implements IShiftDto {
     employee?: string | undefined;
-    startDate!: moment.Moment;
-    endDate!: moment.Moment;
+    startDate!: Date;
+    endDate!: Date;
     type!: ShiftType;
 
     constructor(data?: IShiftDto) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
+        super(data);
     }
 
     init(data?: any) {
+        super.init(data);
         if (data) {
             this.employee = data["employee"];
-            this.startDate = data["startDate"] ? moment(data["startDate"].toString()) : <any>undefined;
-            this.endDate = data["endDate"] ? moment(data["endDate"].toString()) : <any>undefined;
+            this.startDate = data["startDate"] ? new Date(data["startDate"].toString()) : <any>undefined;
+            this.endDate = data["endDate"] ? new Date(data["endDate"].toString()) : <any>undefined;
             this.type = data["type"];
         }
     }
@@ -179,14 +377,15 @@ export class ShiftDto implements IShiftDto {
         data["startDate"] = this.startDate ? this.startDate.toISOString() : <any>undefined;
         data["endDate"] = this.endDate ? this.endDate.toISOString() : <any>undefined;
         data["type"] = this.type;
+        super.toJSON(data);
         return data; 
     }
 }
 
-export interface IShiftDto {
+export interface IShiftDto extends IEntityDto {
     employee?: string | undefined;
-    startDate: moment.Moment;
-    endDate: moment.Moment;
+    startDate: Date;
+    endDate: Date;
     type: ShiftType;
 }
 
@@ -194,6 +393,39 @@ export enum ShiftType {
     Day = "Day", 
     Night = "Night", 
     Off = "Off", 
+}
+
+export class TransitionSetDto extends EntityDto implements ITransitionSetDto {
+    name?: string | undefined;
+
+    constructor(data?: ITransitionSetDto) {
+        super(data);
+    }
+
+    init(data?: any) {
+        super.init(data);
+        if (data) {
+            this.name = data["name"];
+        }
+    }
+
+    static fromJS(data: any): TransitionSetDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new TransitionSetDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        super.toJSON(data);
+        return data; 
+    }
+}
+
+export interface ITransitionSetDto extends IEntityDto {
+    name?: string | undefined;
 }
 
 export class SwaggerException extends Error {

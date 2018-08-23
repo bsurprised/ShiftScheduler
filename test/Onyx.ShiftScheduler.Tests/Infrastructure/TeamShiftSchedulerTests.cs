@@ -19,7 +19,7 @@ namespace Onyx.ShiftScheduler.Tests.Infrastructure
 
             var teamShiftScheduler = new TeamShiftScheduler();
 
-            var schedules = await teamShiftScheduler.CreateNewScheduleAsync(GetEmployees(), date, 14);
+            var schedules = await teamShiftScheduler.CreateNewScheduleAsync(GetDefaultTransitionSet().RuleSet, GetEmployees(), date, 14, 2, 2, 7, 12, 1);
 
             // We have one schedule solution in the results
             Assert.Single(schedules);
@@ -33,7 +33,7 @@ namespace Onyx.ShiftScheduler.Tests.Infrastructure
 
             var teamShiftScheduler = new TeamShiftScheduler();
 
-            var schedules = await teamShiftScheduler.CreateNewScheduleAsync(GetEmployees(), date, 14);
+            var schedules = await teamShiftScheduler.CreateNewScheduleAsync(GetDefaultTransitionSet().RuleSet, GetEmployees(), date, 14, 2, 2, 7, 12, 1);
 
             // We have statistics for debugging
             Assert.NotEmpty(teamShiftScheduler.StatisticalResults);
@@ -48,7 +48,7 @@ namespace Onyx.ShiftScheduler.Tests.Infrastructure
             var teamShiftScheduler = new TeamShiftScheduler();
 
             var employees = GetEmployees();
-            var schedules = await teamShiftScheduler.CreateNewScheduleAsync(employees, date, 14, 2, 2, 7, 12, 3);
+            var schedules = await teamShiftScheduler.CreateNewScheduleAsync(GetDefaultTransitionSet().RuleSet, employees, date, 14, 2, 2, 7, 12, 3);
 
             // We have 3 solutions, dates match and we have 14 days * 10 employee shifts
             Assert.Equal(3, schedules.Count);
@@ -89,7 +89,7 @@ namespace Onyx.ShiftScheduler.Tests.Infrastructure
             var teamShiftScheduler = new TeamShiftScheduler();
 
             var employees = GetEmployees();
-            var schedules = await teamShiftScheduler.CreateNewScheduleAsync(employees, date, 14);
+            var schedules = await teamShiftScheduler.CreateNewScheduleAsync(GetDefaultTransitionSet().RuleSet, employees, date, 14, 2, 2, 7, 12, 3);
 
             var schedule = schedules.FirstOrDefault();
 
@@ -138,6 +138,34 @@ namespace Onyx.ShiftScheduler.Tests.Infrastructure
             };
         }
 
+        public static TransitionSet GetDefaultTransitionSet()
+        {
+            return
+                TransitionSet.FromRuleSet("Two shifts, 2 days off; No 2 nights in a row",
+                    new RuleSet()
+                    {
+                        InitialState = 1,
+                        AcceptingStates = new int[] {1, 2, 3, 4, 5},
+                        Tuples = new[,]
+                        {
+                            /* State 1 - either a day shift, a night shift or an off shift */
+                            {1, 1, 2}, // d --> 2
+                            {1, 2, 3}, // n --> 3
+                            {1, 3, 1}, // o --> 1
+                            /* State 2 - if day and night shift, go to 4 for two days off */
+                            {2, 1, 4}, // d --> 4
+                            {2, 2, 4}, // n --> 4
+                            {2, 3, 1}, // o --> 1
+                            /* State 3 - no night shift if had a night shift before, either day shift or off */
+                            {3, 1, 4}, // d --> 4
+                            {3, 3, 1}, // o --> 1
+                            /* State 4 - only an off shift and continuing to another off */
+                            {4, 3, 5}, // o --> 5
+                            /* State 5 - another off shift and reset the cycle */
+                            {5, 3, 1} // o --> 1
+                        }
+                    });
+        }
         #endregion
 
     }

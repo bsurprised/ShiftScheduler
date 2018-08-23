@@ -7,4 +7,4 @@ services:
       context: ../../src/Onyx.ShiftScheduler.Web
       dockerfile: Dockerfile
     ports:
-      - "9089:80"	  
+      - "9089:80"

@@ -4,5 +4,5 @@ services:
   onyx.shiftscheduler.api:
     image: onyxshiftschedulerapi
     build:
-      context: .
-      dockerfile: ../../src/Onyx.ShiftScheduler.Api/Dockerfile
+      context: ../../
+      dockerfile: src/Onyx.ShiftScheduler.Api/Dockerfile

@@ -33,8 +33,8 @@ namespace Onyx.ShiftScheduler.Api.Exceptions
             var response = context.Response;
 
             var code = (int) HttpStatusCode.InternalServerError;
-            if (exception is IException)
-                code = (int) (exception as IException).StatusCode;
+            if (exception is IException ex)
+                code = (int) ex.StatusCode;
 
             response.ContentType = "application/json";
             response.StatusCode = code;
@@ -43,8 +43,8 @@ namespace Onyx.ShiftScheduler.Api.Exceptions
             {
                 // customize if needed
                 error = exception.Message,
-                statusCode = code
-                /*// dev env
+                statusCode = code,
+                /*/ dev env
                 stack = exception.StackTrace,
                 innerException = new
                 {
